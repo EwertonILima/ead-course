@@ -1,11 +1,18 @@
 package com.ewertonilima.course.specifications;
 
 import com.ewertonilima.course.models.CourseModel;
+import com.ewertonilima.course.models.LessonModel;
+import com.ewertonilima.course.models.ModuleModel;
 import net.kaczmarzyk.spring.data.jpa.domain.Equal;
 import net.kaczmarzyk.spring.data.jpa.domain.Like;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
 import org.springframework.data.jpa.domain.Specification;
+
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Root;
+import java.util.Collection;
+import java.util.UUID;
 
 public class SpecificationTemplate {
 
@@ -17,4 +24,32 @@ public class SpecificationTemplate {
     public interface CourseSpec extends Specification<CourseModel> {
     }
 
+    @Spec(path = "title", spec = Like.class)
+    public interface ModuleSpec extends Specification<ModuleModel> {
+    }
+
+    @Spec(path = "title", spec = Like.class)
+    public interface LessonSpec extends Specification<LessonModel> {
+    }
+
+    public static Specification<ModuleModel> moduleCourseId(final UUID courseId) {
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Root<ModuleModel> module = root;
+            Root<CourseModel> course = query.from(CourseModel.class);
+            Expression<Collection<ModuleModel>> courseModules = course.get("modules");
+            return cb.and(cb.equal(course.get("courseId"), courseId), cb.isMember(module, courseModules));
+        };
+    }
+
+    public static Specification<LessonModel> lessonModuleId(final UUID moduleId) {
+        return (root, criteriaQuery, criteriaBuilder) -> {
+            criteriaQuery.distinct(true);
+            Root<LessonModel> lesson = root;
+            Root<ModuleModel> module = criteriaQuery.from(ModuleModel.class);
+            Expression<Collection<LessonModel>> moduleLessons = module.get("lessons");
+            return criteriaBuilder.and(criteriaBuilder.equal(module.get("moduleId"), moduleId),
+                    criteriaBuilder.isMember(lesson, moduleLessons));
+        };
+    }
 }
