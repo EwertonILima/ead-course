@@ -6,6 +6,7 @@ import com.ewertonilima.course.models.ModuleModel;
 import com.ewertonilima.course.services.LessonService;
 import com.ewertonilima.course.services.ModuleService;
 import com.ewertonilima.course.specifications.SpecificationTemplate;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
+@Log4j2
 @RestController
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class LessonController {
@@ -42,6 +44,7 @@ public class LessonController {
     @PostMapping("modules/{moduleId}/lessons")
     public ResponseEntity<Object> saveLesson(@PathVariable(value = "moduleId") UUID moduleId,
                                              @RequestBody @Valid LessonDto lessonDto) {
+        log.debug("POST saveLesson lessonDto received {} ", lessonDto.toString());
         Optional<ModuleModel> moduleModelOptional = moduleService.findById(moduleId);
         if (!moduleModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Module Not Found");
@@ -51,17 +54,22 @@ public class LessonController {
         lessonModel.setCreationDate(LocalDateTime.now(ZoneId.of("UTC")));
         lessonModel.setModule(moduleModelOptional.get());
         lessonService.save(lessonModel);
+        log.debug("POST saveLesson lessonId saved {} ", lessonModel.getLessonId());
+        log.info("Lesson saved successfully lessonId {} ", lessonModel.getLessonId());
         return ResponseEntity.status(HttpStatus.CREATED).body(lessonModel);
     }
 
     @DeleteMapping("modules/{moduleId}/lessons/{lessonId}")
     public ResponseEntity<Object> deleteLesson(@PathVariable(value = "moduleId") UUID moduleId,
                                                @PathVariable(value = "lessonId") UUID lessonId) {
+        log.debug("DELETE deleteLesson lessonId received {} ", lessonId);
         Optional<LessonModel> lessonModelOptional = lessonService.findLessonIntoModule(moduleId, lessonId);
         if (!lessonModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Lesson not found for this module.");
         }
         lessonService.delete(lessonModelOptional.get());
+        log.debug("DELETE deleteLesson lessonId deleted {} ", lessonId);
+        log.info("Lesson deleted successfully lessonId {} ", lessonId);
         return ResponseEntity.status(HttpStatus.OK).body("Lesson deleted successfully");
     }
 
@@ -69,6 +77,7 @@ public class LessonController {
     public ResponseEntity<Object> updateLesson(@PathVariable(value = "moduleId") UUID moduleId,
                                                @PathVariable(value = "lessonId") UUID lessonId,
                                                @RequestBody @Valid LessonDto lessonDto) {
+        log.debug("PUT updateLesson lessonDto received {} ", lessonDto.toString());
         Optional<LessonModel> lessonModelOptional = lessonService.findLessonIntoModule(moduleId, lessonId);
         if (!lessonModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Lesson not found for this module.");
@@ -78,6 +87,8 @@ public class LessonController {
         lessonModel.setDescription(lessonDto.getDescription());
         lessonModel.setVideoUrl(lessonDto.getVideoUrl());
         lessonService.save(lessonModel);
+        log.debug("PUT updateLesson lessonId saved {} ", lessonModel.getLessonId());
+        log.info("Lesson updated successfully lessonId {} ", lessonModel.getLessonId());
         return ResponseEntity.status(HttpStatus.OK).body(lessonModel);
     }
 
