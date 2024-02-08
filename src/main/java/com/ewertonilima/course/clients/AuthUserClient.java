@@ -19,12 +19,12 @@ import java.util.UUID;
 
 @Log4j2
 @Component
-public class CourseClient {
+public class AuthUserClient {
 
     final RestTemplate restTemplate;
     final UtilsService utilsService;
 
-    public CourseClient(RestTemplate restTemplate, UtilsService utilsService) {
+    public AuthUserClient(RestTemplate restTemplate, UtilsService utilsService) {
         this.restTemplate = restTemplate;
         this.utilsService = utilsService;
     }

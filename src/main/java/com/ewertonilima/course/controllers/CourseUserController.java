@@ -1,6 +1,6 @@
 package com.ewertonilima.course.controllers;
 
-import com.ewertonilima.course.clients.CourseClient;
+import com.ewertonilima.course.clients.AuthUserClient;
 import com.ewertonilima.course.dtos.SubscriptionDto;
 import com.ewertonilima.course.dtos.UserDto;
 import com.ewertonilima.course.models.CourseModel;
@@ -28,16 +28,16 @@ import java.util.UUID;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class CourseUserController {
 
-    final CourseClient courseClient;
+    final AuthUserClient authUserClient;
     final CourseService courseService;
     final CourseUserService courseUserService;
 
     public CourseUserController(
-            CourseClient courseClient,
+            AuthUserClient authUserClient,
             CourseService courseService,
             CourseUserService courseUserService
     ) {
-        this.courseClient = courseClient;
+        this.authUserClient = authUserClient;
         this.courseService = courseService;
         this.courseUserService = courseUserService;
     }
@@ -46,7 +46,7 @@ public class CourseUserController {
     public ResponseEntity<Page<UserDto>> getAllUsersByCourse(@PageableDefault(page = 0, size = 10,
             sort = "userId", direction = Sort.Direction.ASC) Pageable pageable,
                                                              @PathVariable(value = "courseId") UUID courseId) {
-        return ResponseEntity.status(HttpStatus.OK).body(courseClient.getAllUsersByCourse(courseId, pageable));
+        return ResponseEntity.status(HttpStatus.OK).body(authUserClient.getAllUsersByCourse(courseId, pageable));
     }
 
     @PostMapping("/courses/{courseId}/users/subscription")
@@ -60,7 +60,7 @@ public class CourseUserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Error: subscription already exists!");
         }
         //TODO user verification
-        CourseUserModel courseUserModel = courseUserService.save(courseModelOptional.get().convertToCourseUserModel(subscriptionDto.getUserId()));
+        CourseUserModel  courseUserModel = courseUserService.save(courseModelOptional.get().convertToCourseUserModel(subscriptionDto.getUserId()));
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Subscription created successfully.");
     }
