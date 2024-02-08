@@ -51,4 +51,11 @@ public class AuthUserClient {
         log.info("Ending request /users courseId {} ", courseId);
         return result.getBody();
     }
+
+    public ResponseEntity<UserDto> getOneUserById(UUID userId) {
+        String url = REQUEST_URL_AUTHUSER + utilsService.createUrlGetOneUserById(userId);
+        return restTemplate.exchange(url, HttpMethod.GET, null, UserDto.class);
+    }
+
+
 }
