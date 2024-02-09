@@ -1,5 +1,6 @@
 package com.ewertonilima.course.clients;
 
+import com.ewertonilima.course.dtos.CourseUserDto;
 import com.ewertonilima.course.dtos.ResponsePageDto;
 import com.ewertonilima.course.dtos.UserDto;
 import com.ewertonilima.course.services.UtilsService;
@@ -57,5 +58,11 @@ public class AuthUserClient {
         return restTemplate.exchange(url, HttpMethod.GET, null, UserDto.class);
     }
 
-
+    public void postSubscriptionUserInCourse(UUID courseId, UUID userId) {
+        String url = REQUEST_URL_AUTHUSER + utilsService.createUrlPostSubscriptionUserInCourse(userId);
+        var courseUserDto = new CourseUserDto();
+        courseUserDto.setUserId(userId);
+        courseUserDto.setCourseId(courseId);
+        restTemplate.postForObject(url, courseUserDto, String.class);
+    }
 }
