@@ -1,9 +1,11 @@
 package com.ewertonilima.course.services.impl;
 
 import com.ewertonilima.course.models.CourseModel;
+import com.ewertonilima.course.models.CourseUserModel;
 import com.ewertonilima.course.models.LessonModel;
 import com.ewertonilima.course.models.ModuleModel;
 import com.ewertonilima.course.repositories.CourseRepository;
+import com.ewertonilima.course.repositories.CourseUserRepository;
 import com.ewertonilima.course.repositories.LessonRepository;
 import com.ewertonilima.course.repositories.ModuleRepository;
 import com.ewertonilima.course.services.CourseService;
@@ -29,6 +31,12 @@ public class CourseServiceImpl implements CourseService {
 
     @Autowired
     LessonRepository lessonRepository;
+
+    final CourseUserRepository courseUserRepository;
+
+    public CourseServiceImpl(CourseUserRepository courseUserRepository) {
+        this.courseUserRepository = courseUserRepository;
+    }
 
     @Override
     public CourseModel save(CourseModel courseModel) {
@@ -58,8 +66,11 @@ public class CourseServiceImpl implements CourseService {
             }
             moduleRepository.deleteAll(moduleModelList);
         }
+        List<CourseUserModel> courseUserModelList = courseUserRepository.findAllCourseUserIntoCourse(courseModel.getCourseId());
+        if (!courseUserModelList.isEmpty()) {
+            courseUserRepository.deleteAll(courseUserModelList);
+        }
         courseRepository.delete(courseModel);
     }
-
 
 }
