@@ -1,5 +1,6 @@
 package com.ewertonilima.course.services.impl;
 
+import com.ewertonilima.course.clients.AuthUserClient;
 import com.ewertonilima.course.models.CourseModel;
 import com.ewertonilima.course.models.CourseUserModel;
 import com.ewertonilima.course.models.LessonModel;
@@ -34,8 +35,11 @@ public class CourseServiceImpl implements CourseService {
 
     final CourseUserRepository courseUserRepository;
 
-    public CourseServiceImpl(CourseUserRepository courseUserRepository) {
+    final AuthUserClient authUserClient;
+
+    public CourseServiceImpl(CourseUserRepository courseUserRepository, AuthUserClient authUserClient) {
         this.courseUserRepository = courseUserRepository;
+        this.authUserClient = authUserClient;
     }
 
     @Override
@@ -56,6 +60,7 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     @Override
     public void deleteCourse(CourseModel courseModel) {
+        boolean deleteCourseUserInAuthUser = false;
         List<ModuleModel> moduleModelList = moduleRepository.findAllModulesIntoCourse(courseModel.getCourseId());
         if (!moduleModelList.isEmpty()) {
             for (ModuleModel module : moduleModelList) {
@@ -69,8 +74,13 @@ public class CourseServiceImpl implements CourseService {
         List<CourseUserModel> courseUserModelList = courseUserRepository.findAllCourseUserIntoCourse(courseModel.getCourseId());
         if (!courseUserModelList.isEmpty()) {
             courseUserRepository.deleteAll(courseUserModelList);
+            deleteCourseUserInAuthUser = true;
         }
         courseRepository.delete(courseModel);
+        if (deleteCourseUserInAuthUser) {
+            authUserClient.deleteCourseInAuthUser(courseModel.getCourseId());
+        }
+
     }
 
 }
