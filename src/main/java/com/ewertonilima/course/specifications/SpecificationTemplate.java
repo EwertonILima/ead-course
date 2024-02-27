@@ -3,6 +3,7 @@ package com.ewertonilima.course.specifications;
 import com.ewertonilima.course.models.CourseModel;
 import com.ewertonilima.course.models.LessonModel;
 import com.ewertonilima.course.models.ModuleModel;
+import com.ewertonilima.course.models.UserModel;
 import net.kaczmarzyk.spring.data.jpa.domain.Equal;
 import net.kaczmarzyk.spring.data.jpa.domain.Like;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
@@ -22,6 +23,15 @@ public class SpecificationTemplate {
             @Spec(path = "name", spec = Like.class)
     })
     public interface CourseSpec extends Specification<CourseModel> {
+    }
+
+    @And({
+            @Spec(path = "email", spec = Like.class),
+            @Spec(path = "fullName", spec = Like.class),
+            @Spec(path = "userStatus", spec = Equal.class),
+            @Spec(path = "userType", spec = Equal.class)
+    })
+    public interface UserSpec extends Specification<UserModel> {
     }
 
     @Spec(path = "title", spec = Like.class)
@@ -50,6 +60,26 @@ public class SpecificationTemplate {
             Expression<Collection<LessonModel>> moduleLessons = module.get("lessons");
             return criteriaBuilder.and(criteriaBuilder.equal(module.get("moduleId"), moduleId),
                     criteriaBuilder.isMember(lesson, moduleLessons));
+        };
+    }
+
+    public static Specification<UserModel> userCourseId(final UUID courseId) {
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Root<UserModel> user = root;
+            Root<CourseModel> course = query.from(CourseModel.class);
+            Expression<Collection<UserModel>> courseUsers = course.get("users");
+            return cb.and(cb.equal(course.get("courseId"), courseId), cb.isMember(user, courseUsers));
+        };
+    }
+
+    public static Specification<CourseModel> courseUserId(final UUID userId) {
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Root<CourseModel> course = root;
+            Root<UserModel> user = query.from(UserModel.class);
+            Expression<Collection<CourseModel>> usersCourses = user.get("courses");
+            return cb.and(cb.equal(course.get("userId"), userId), cb.isMember(course, usersCourses));
         };
     }
 }
