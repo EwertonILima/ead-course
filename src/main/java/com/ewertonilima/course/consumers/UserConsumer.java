@@ -2,6 +2,7 @@ package com.ewertonilima.course.consumers;
 
 import com.ewertonilima.course.dtos.UserEventDto;
 import com.ewertonilima.course.enums.ActionType;
+import com.ewertonilima.course.models.UserModel;
 import com.ewertonilima.course.services.UserService;
 import org.springframework.amqp.core.ExchangeTypes;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -29,7 +30,11 @@ public class UserConsumer {
 
         switch (ActionType.valueOf(userEventDto.getActionType())) {
             case CREATE:
+            case UPDATE:
                 userService.save(userModel);
+                break;
+            case DELETE:
+                userService.delete(userModel.getUserId());
                 break;
         }
     }
