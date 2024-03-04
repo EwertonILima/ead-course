@@ -1,7 +1,9 @@
 package com.ewertonilima.course.controllers;
 
 import com.ewertonilima.course.dtos.SubscriptionDto;
+import com.ewertonilima.course.enums.UserStatus;
 import com.ewertonilima.course.models.CourseModel;
+import com.ewertonilima.course.models.UserModel;
 import com.ewertonilima.course.services.CourseService;
 import com.ewertonilima.course.services.UserService;
 import com.ewertonilima.course.specifications.SpecificationTemplate;
@@ -56,7 +58,17 @@ public class CourseUserController {
         if (!courseModelOptional.isPresent()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Course Not Found");
         }
-        //TODO state transfer verification
-        return ResponseEntity.status(HttpStatus.CREATED).body("");
+        if (courseService.existsByCourseAndUser(courseId, subscriptionDto.getUserId())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error: subscription already exists!");
+        }
+        Optional<UserModel> userModelOptional = userService.findById(subscriptionDto.getUserId());
+        if (!userModelOptional.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User Not Found");
+        }
+        if (userModelOptional.get().getUserStatus().equals(UserStatus.BLOCKED.toString())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("User is Blocked");
+        }
+        courseService.saveSubscriptionUserInCourse(courseModelOptional.get().getCourseId(), userModelOptional.get().getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).body("Subscription created successfully");
     }
 }
