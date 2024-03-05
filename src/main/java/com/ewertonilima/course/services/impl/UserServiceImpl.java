@@ -1,12 +1,14 @@
 package com.ewertonilima.course.services.impl;
 
 import com.ewertonilima.course.models.UserModel;
+import com.ewertonilima.course.repositories.CourseRepository;
 import com.ewertonilima.course.repositories.UserRepository;
 import com.ewertonilima.course.services.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -15,9 +17,11 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     final UserRepository userRepository;
+    final CourseRepository courseRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, CourseRepository courseRepository) {
         this.userRepository = userRepository;
+        this.courseRepository = courseRepository;
     }
 
     @Override
@@ -30,8 +34,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(userModel);
     }
 
+    @Transactional
     @Override
     public void delete(UUID userId) {
+        courseRepository.deleteCourseUserByUser(userId);
         userRepository.deleteById(userId);
     }
 
