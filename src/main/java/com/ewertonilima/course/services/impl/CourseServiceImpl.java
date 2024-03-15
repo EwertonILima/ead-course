@@ -1,13 +1,17 @@
 package com.ewertonilima.course.services.impl;
 
+import com.ewertonilima.course.dtos.NotificationCommandDto;
 import com.ewertonilima.course.models.CourseModel;
 import com.ewertonilima.course.models.LessonModel;
 import com.ewertonilima.course.models.ModuleModel;
+import com.ewertonilima.course.models.UserModel;
+import com.ewertonilima.course.publishers.NotificationCommandPublisher;
 import com.ewertonilima.course.repositories.CourseRepository;
 import com.ewertonilima.course.repositories.LessonRepository;
 import com.ewertonilima.course.repositories.ModuleRepository;
 import com.ewertonilima.course.repositories.UserRepository;
 import com.ewertonilima.course.services.CourseService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Log4j2
 @Service
 public class CourseServiceImpl implements CourseService {
 
@@ -32,9 +37,11 @@ public class CourseServiceImpl implements CourseService {
     LessonRepository lessonRepository;
 
     final UserRepository userRepository;
+    final NotificationCommandPublisher notificationCommandPublisher;
 
-    public CourseServiceImpl(UserRepository userRepository) {
+    public CourseServiceImpl(UserRepository userRepository, NotificationCommandPublisher notificationCommandPublisher) {
         this.userRepository = userRepository;
+        this.notificationCommandPublisher = notificationCommandPublisher;
     }
 
     @Override
@@ -61,6 +68,21 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public void saveSubscriptionUserInCourse(UUID courseId, UUID userId) {
         courseRepository.saveCourseUser(courseId, userId);
+    }
+
+    @Transactional
+    @Override
+    public void saveSubscriptionUserInCourseAndSendNotification(CourseModel courseModel, UserModel userModel) {
+        courseRepository.saveCourseUser(courseModel.getCourseId(), userModel.getUserId());
+        try {
+            var notificationCommandDto = new NotificationCommandDto();
+            notificationCommandDto.setTitle("Welcome to course: " + courseModel.getName());
+            notificationCommandDto.setMessage(userModel.getFullName() + " your subscription was successful! ");
+            notificationCommandDto.setUserId(userModel.getUserId());
+            notificationCommandPublisher.publishNotificationCommand(notificationCommandDto);
+        } catch (Exception e) {
+            log.warn("Error sending notification");
+        }
     }
 
     @Transactional
